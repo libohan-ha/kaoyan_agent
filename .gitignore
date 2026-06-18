@@ -1,0 +1,62 @@
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.venv/
+ENV/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+
+# ===== 环境与密钥 =====
+.env
+*.key
+secrets/
+
+# ===== 数据库与数据 =====
+*.db
+*.sqlite3
+*.db-journal
+*.db-wal
+*.db-shm
+backend/*.db
+backend/*.sqlite3
+import_preview/
+import_log.txt
+
+# ===== 日志 =====
+*.log
+server_out.log
+server_err.log
+
+# ===== 备份 =====
+*.backup
+*.backup-*
+
+# ===== 前端 =====
+node_modules/
+dist/
+.vite/
+frontend/dist/
+frontend/node_modules/
+*.local
+
+# ===== IDE =====
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ===== 构建产物 =====
+build/
+develop-eggs/
+downloads/
+eggs/
+sdist/
+wheels/
