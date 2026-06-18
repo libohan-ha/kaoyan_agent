@@ -1,0 +1,4 @@
+interface:
+  display_name: "Kaoyan Agent API"
+  short_description: "Save, search, and review 考研 knowledge notes"
+  default_prompt: "Use $kaoyan-agent-api to work with my Kaoyan Agent knowledge base."
