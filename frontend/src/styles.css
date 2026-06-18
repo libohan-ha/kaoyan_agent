@@ -1,0 +1,401 @@
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+  background: #f5f7fb;
+}
+
+body {
+  color: #172033;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.app-shell {
+  min-height: 100vh;
+}
+
+.app-sider {
+  background: #ffffff !important;
+  border-right: 1px solid #e7eaf0;
+}
+
+.brand-block {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 72px;
+  padding: 0 18px;
+  border-bottom: 1px solid #eef1f5;
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  background: #1f2937;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.brand-title {
+  margin: 0 !important;
+  font-size: 17px !important;
+}
+
+.brand-subtitle {
+  font-size: 12px;
+}
+
+.nav-menu {
+  border-inline-end: 0 !important;
+  padding: 10px;
+}
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  padding: 0 24px;
+  background: rgba(255, 255, 255, 0.92);
+  border-bottom: 1px solid #e7eaf0;
+  backdrop-filter: blur(10px);
+}
+
+.app-header a {
+  color: #526071;
+}
+
+.app-header a.active {
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+.app-content {
+  padding: 20px;
+}
+
+.page-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: min(1180px, 100%);
+  margin: 0 auto;
+}
+
+.page-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.page-toolbar h3 {
+  margin: 0 !important;
+}
+
+.filter-bar {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(120px, 160px) minmax(140px, 180px) 150px auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.knowledge-layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.subject-sidebar {
+  position: sticky;
+  top: 76px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: #ffffff;
+  border: 1px solid #e7eaf0;
+  border-radius: 8px;
+}
+
+.subject-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 4px 8px;
+  border-bottom: 1px solid #eef1f5;
+}
+
+.subject-nav-item {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  min-height: 56px;
+  padding: 9px 10px;
+  color: #334155;
+  text-align: left;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.subject-nav-item:hover {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.subject-nav-item.active {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.subject-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.subject-dot.all {
+  background: #111827;
+}
+
+.subject-label {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.subject-label strong {
+  color: #0f172a;
+  font-size: 14px;
+}
+
+.subject-label small {
+  overflow: hidden;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.subject-count {
+  min-width: 24px;
+  color: #475569;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.knowledge-main-panel {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.knowledge-filter-bar {
+  grid-template-columns: minmax(220px, 1fr) minmax(140px, 180px) 150px auto;
+  padding: 12px;
+  background: #ffffff;
+  border: 1px solid #e7eaf0;
+  border-radius: 8px;
+}
+
+.page-grid.chat-page {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 14px;
+  width: min(980px, 100%);
+  height: calc(100vh - 96px);
+  margin: 0 auto;
+}
+
+.chat-thread {
+  min-height: 0;
+  overflow: auto;
+  padding: 2px 4px 12px;
+}
+
+.empty-state {
+  margin-top: 20vh;
+}
+
+.message-row {
+  display: flex;
+  margin: 12px 0;
+}
+
+.message-row.user {
+  justify-content: flex-end;
+}
+
+.message-row.assistant {
+  justify-content: flex-start;
+}
+
+.message-card {
+  width: min(720px, 92%);
+  border-radius: 6px;
+}
+
+.message-row.user .message-card {
+  background: #edf4ff;
+  border-color: #bfdbfe;
+}
+
+.message-card.error {
+  border-color: #fca5a5;
+}
+
+.message-role {
+  display: block;
+  margin-bottom: 6px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.message-content {
+  margin-bottom: 0 !important;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.thoughts-line {
+  margin-top: 10px;
+}
+
+.matched-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #eef1f5;
+}
+
+.matched-item {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  color: #334155;
+  font-size: 13px;
+}
+
+.composer-panel {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+  padding: 12px;
+  background: #ffffff;
+  border: 1px solid #e7eaf0;
+  border-radius: 8px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+}
+
+.preview-card {
+  margin-top: 12px;
+  background: #ffffff;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 160px minmax(0, 1fr);
+  gap: 12px;
+}
+
+.knowledge-content {
+  min-width: 360px;
+  margin: 0 !important;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.review-markdown {
+  margin: 0 !important;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.review-item {
+  padding-inline: 14px !important;
+  background: #ffffff;
+  border: 1px solid #eef1f5 !important;
+  border-radius: 6px;
+}
+
+.logs-timeline {
+  padding: 16px 0 0 4px;
+}
+
+@media (max-width: 900px) {
+  .app-header {
+    padding: 0 14px;
+  }
+
+  .filter-bar {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .knowledge-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .subject-sidebar {
+    position: static;
+  }
+
+  .knowledge-filter-bar {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .composer-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .app-content {
+    padding: 12px;
+  }
+
+  .page-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .filter-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .knowledge-filter-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .message-card {
+    width: 100%;
+  }
+}

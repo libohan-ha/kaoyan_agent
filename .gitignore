@@ -11,6 +11,7 @@ ENV/
 *.egg-info/
 .pytest_cache/
 .mypy_cache/
+*.tsbuildinfo
 
 # ===== 环境与密钥 =====
 .env
