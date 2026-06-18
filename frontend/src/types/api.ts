@@ -43,6 +43,23 @@ export interface ReviewLog {
   channel: string;
 }
 
+export interface ChatSession {
+  id: number;
+  title: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface StoredChatMessage {
+  id: number;
+  role: "user" | "assistant";
+  content: string;
+  matched_knowledge: KnowledgeItem[];
+  preview?: KnowledgePreview | null;
+  thoughts: string[];
+  created_at: string;
+}
+
 export type ChatMode = "auto" | "save" | "ask";
 
 export type SseEvent =

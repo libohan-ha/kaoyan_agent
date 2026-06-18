@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   App,
   Button,
@@ -11,10 +11,10 @@ import {
   Tag,
   Typography
 } from "antd";
-import { SendOutlined } from "@ant-design/icons";
+import { PlusOutlined, SendOutlined } from "@ant-design/icons";
 import KnowledgePreviewCard from "../components/KnowledgePreviewCard";
-import { confirmKnowledge, streamChat } from "../services/api";
-import type { ChatMessage, ChatMode, KnowledgePreview } from "../types/api";
+import { confirmKnowledge, getSession, listSessions, streamChat } from "../services/api";
+import type { ChatMessage, ChatMode, KnowledgePreview, StoredChatMessage } from "../types/api";
 
 const modeOptions = [
   { label: "自动", value: "auto" },
@@ -22,8 +22,21 @@ const modeOptions = [
   { label: "提问", value: "ask" }
 ];
 
+const LAST_SESSION_KEY = "kaoyan-agent:last-session-id";
+
 function nextId() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function mapStoredMessage(item: StoredChatMessage): ChatMessage {
+  return {
+    id: `stored-${item.id}`,
+    role: item.role,
+    content: item.content,
+    matched: item.matched_knowledge,
+    preview: item.preview ?? undefined,
+    thoughts: item.thoughts
+  };
 }
 
 export default function ChatPage() {
@@ -32,6 +45,8 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const [mode, setMode] = useState<ChatMode>("auto");
   const [loading, setLoading] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [sessionTitle, setSessionTitle] = useState("新对话");
   const [savingPreviewId, setSavingPreviewId] = useState<string | null>(null);
   const sessionIdRef = useRef<number | undefined>();
 
@@ -41,6 +56,56 @@ export default function ChatPage() {
     setMessages((items) =>
       items.map((item) => (item.id === id ? { ...item, ...patch } : item))
     );
+  };
+
+  const loadSession = async (sessionId: number) => {
+    const result = await getSession(sessionId);
+    sessionIdRef.current = result.session.id;
+    window.localStorage.setItem(LAST_SESSION_KEY, String(result.session.id));
+    setSessionTitle(result.session.title || "新对话");
+    setMessages(result.messages.map(mapStoredMessage));
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+    const restore = async () => {
+      setHistoryLoading(true);
+      try {
+        const stored = Number(window.localStorage.getItem(LAST_SESSION_KEY));
+        if (stored) {
+          const result = await getSession(stored);
+          if (cancelled) return;
+          sessionIdRef.current = result.session.id;
+          setSessionTitle(result.session.title || "新对话");
+          setMessages(result.messages.map(mapStoredMessage));
+          return;
+        }
+
+        const result = await listSessions();
+        if (cancelled) return;
+        const latest = result.sessions[0];
+        if (latest) {
+          await loadSession(latest.id);
+        }
+      } catch {
+        window.localStorage.removeItem(LAST_SESSION_KEY);
+      } finally {
+        if (!cancelled) setHistoryLoading(false);
+      }
+    };
+
+    void restore();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const newChat = () => {
+    sessionIdRef.current = undefined;
+    window.localStorage.removeItem(LAST_SESSION_KEY);
+    setSessionTitle("新对话");
+    setMessages([]);
+    setInput("");
   };
 
   const send = async () => {
@@ -88,6 +153,10 @@ export default function ChatPage() {
         }
       );
       sessionIdRef.current = sessionId;
+      if (sessionId) {
+        window.localStorage.setItem(LAST_SESSION_KEY, String(sessionId));
+        if (sessionTitle === "新对话") setSessionTitle(text.slice(0, 24));
+      }
     } catch (error) {
       updateAssistant(assistantId, {
         content: error instanceof Error ? error.message : "请求失败",
@@ -117,8 +186,24 @@ export default function ChatPage() {
 
   return (
     <div className="page-grid chat-page">
+      <section className="chat-toolbar">
+        <div>
+          <Typography.Text strong>{sessionTitle}</Typography.Text>
+          <Typography.Text type="secondary" className="chat-session-meta">
+            {sessionIdRef.current ? `会话 #${sessionIdRef.current}` : "尚未开始"}
+          </Typography.Text>
+        </div>
+        <Button icon={<PlusOutlined />} onClick={newChat}>
+          新对话
+        </Button>
+      </section>
+
       <section className="chat-thread">
-        {messages.length === 0 ? (
+        {historyLoading ? (
+          <div className="empty-state">
+            <Spin />
+          </div>
+        ) : messages.length === 0 ? (
           <Empty description="暂无对话" className="empty-state" />
         ) : (
           messages.map((item) => (

@@ -1,5 +1,5 @@
 import { afterEach, expect, test, vi } from "vitest";
-import { createKnowledge } from "./api";
+import { createKnowledge, getSession } from "./api";
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -38,4 +38,29 @@ test("creates knowledge manually without AI categorization", async () => {
       })
     })
   );
+});
+
+test("loads a persisted chat session by id", async () => {
+  const fetchMock = vi.fn().mockResolvedValue({
+    ok: true,
+    json: async () => ({
+      session: { id: 12, title: "树的高度", created_at: "2026-06-19 10:00:00" },
+      messages: [
+        {
+          id: 1,
+          role: "user",
+          content: "树的高度怎么求",
+          matched_knowledge: [],
+          preview: null,
+          thoughts: [],
+          created_at: "2026-06-19 10:00:01"
+        }
+      ]
+    })
+  });
+  vi.stubGlobal("fetch", fetchMock);
+
+  await getSession(12);
+
+  expect(fetchMock).toHaveBeenCalledWith("/api/sessions/12");
 });

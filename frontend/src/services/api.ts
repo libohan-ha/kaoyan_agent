@@ -1,11 +1,13 @@
 import type {
   ChatMode,
+  ChatSession,
   KnowledgeCreatePayload,
   KnowledgeItem,
   KnowledgePreview,
   ReviewLog,
   ReviewResponse,
   SseEvent,
+  StoredChatMessage,
   SubjectItem
 } from "../types/api";
 
@@ -125,6 +127,16 @@ export async function triggerReview(): Promise<Record<string, unknown>> {
 
 export async function listReviewLogs(): Promise<{ logs: ReviewLog[] }> {
   return readJson(await fetch(`${API_BASE}/api/review/logs`));
+}
+
+export async function listSessions(): Promise<{ sessions: ChatSession[] }> {
+  return readJson(await fetch(`${API_BASE}/api/sessions`));
+}
+
+export async function getSession(
+  sessionId: number
+): Promise<{ session: ChatSession; messages: StoredChatMessage[] }> {
+  return readJson(await fetch(`${API_BASE}/api/sessions/${sessionId}`));
 }
 
 export async function streamChat(
