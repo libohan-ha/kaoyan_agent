@@ -7,11 +7,11 @@
 - 推送内容 = 原文清单（不转提问式）
 """
 import json
-from datetime import datetime, date
 from typing import Optional
 
 from database import get_connection
 from services import knowledge_service
+from services.time_utils import to_local_display, yesterday_str
 
 
 def get_yesterday_knowledge() -> list[dict]:
@@ -26,15 +26,7 @@ def build_review_content(items: list[dict], target_date: Optional[str] = None) -
         items: 知识点列表
         target_date: 复盘的目标日期（昨天的日期），用于标题
     """
-    yesterday = target_date or (
-        datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-    )
-    if isinstance(yesterday, str):
-        date_str = yesterday
-    else:
-        from datetime import timedelta
-
-        date_str = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+    date_str = target_date or yesterday_str()
 
     if not items:
         return (
@@ -84,7 +76,7 @@ def list_review_logs(limit: int = 20) -> list[dict]:
                 "id": r["id"],
                 "review_date": r["review_date"],
                 "knowledge_ids": json.loads(r["knowledge_ids"] or "[]"),
-                "pushed_at": r["pushed_at"],
+                "pushed_at": to_local_display(r["pushed_at"]),
                 "channel": r["channel"],
             }
             for r in rows
@@ -102,30 +94,26 @@ def run_daily_review() -> dict:
     from services.notifier import get_notifier
 
     items = get_yesterday_knowledge()
-    yesterday_str = (datetime.now().replace(microsecond=0)).strftime("%Y-%m-%d")
-    # 用昨天日期
-    from datetime import timedelta
-
-    yesterday_str = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
-    title, content = build_review_content(items, yesterday_str)
+    review_date = yesterday_str()
+    title, content = build_review_content(items, review_date)
 
     notifier = get_notifier()
     try:
         result = notifier.send(title, content)
-        record_push([item["id"] for item in items], yesterday_str, channel=notifier.name)
+        record_push([item["id"] for item in items], review_date, channel=notifier.name)
         return {
             "success": True,
-            "date": yesterday_str,
+            "date": review_date,
             "count": len(items),
             "channel": notifier.name,
             "title": title,
             "send_result": result,
         }
     except Exception as exc:
-        record_push([item["id"] for item in items], yesterday_str, channel="error")
+        record_push([item["id"] for item in items], review_date, channel="error")
         return {
             "success": False,
-            "date": yesterday_str,
+            "date": review_date,
             "count": len(items),
             "error": str(exc),
         }

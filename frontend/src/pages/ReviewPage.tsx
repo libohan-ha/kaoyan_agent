@@ -8,6 +8,7 @@ import {
   triggerReview
 } from "../services/api";
 import type { KnowledgeItem, ReviewLog, ReviewResponse } from "../types/api";
+import MarkdownContent from "../components/MarkdownContent";
 
 type ViewKey = "yesterday" | "today" | "logs";
 
@@ -101,9 +102,7 @@ export default function ReviewPage() {
         <Space direction="vertical" size={16} className="full-width">
           {review?.content && (
             <Card title={review.title ?? "复盘内容"} loading={loading}>
-              <Typography.Paragraph className="review-markdown">
-                {review.content}
-              </Typography.Paragraph>
+              <MarkdownContent content={review.content} className="review-markdown" />
             </Card>
           )}
           {review?.items?.length ? (

@@ -2,6 +2,7 @@
 from fastapi import APIRouter
 
 from services import review_service, knowledge_service
+from services.time_utils import today_str, yesterday_str
 import scheduler
 
 router = APIRouter(prefix="/api/review", tags=["review"])
@@ -24,9 +25,7 @@ def yesterday():
 @router.get("/today")
 def today():
     """返回今天记录的知识点（给前端"今日复盘"页用）。"""
-    from datetime import datetime
-
-    date_str = datetime.now().strftime("%Y-%m-%d")
+    date_str = today_str()
     items = knowledge_service.get_by_date(date_str)
     return {"date": date_str, "count": len(items), "items": items}
 
@@ -45,6 +44,4 @@ def logs(limit: int = 20):
 
 
 def _yesterday_str() -> str:
-    from datetime import datetime, timedelta
-
-    return (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+    return yesterday_str()

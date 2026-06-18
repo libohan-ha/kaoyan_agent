@@ -6,11 +6,11 @@
 import hashlib
 import json
 import re
-from datetime import datetime
 from typing import Optional
 
 from database import get_connection
 from services import embedding_service
+from services.time_utils import local_date_bounds_utc, to_local_display, yesterday_str
 
 
 def _content_hash(content: str) -> str:
@@ -24,8 +24,8 @@ def _row_to_dict(row) -> dict:
         "subject": row["subject"],
         "tags": json.loads(row["tags"] or "[]"),
         "source": row["source"],
-        "created_at": row["created_at"],
-        "updated_at": row["updated_at"],
+        "created_at": to_local_display(row["created_at"]),
+        "updated_at": to_local_display(row["updated_at"]),
     }
 
 
@@ -129,14 +129,18 @@ def list_knowledge(
         sql += " AND tags LIKE ?"
         params.append(f'%"{tag}"%')
     if date:
-        sql += " AND date(created_at) = ?"
-        params.append(date)
-    if date_from:
-        sql += " AND date(created_at) >= ?"
-        params.append(date_from)
-    if date_to:
-        sql += " AND date(created_at) <= ?"
-        params.append(date_to)
+        start_utc, end_utc = local_date_bounds_utc(date)
+        sql += " AND created_at >= ? AND created_at < ?"
+        params.extend([start_utc, end_utc])
+    else:
+        if date_from:
+            start_utc, _ = local_date_bounds_utc(date_from)
+            sql += " AND created_at >= ?"
+            params.append(start_utc)
+        if date_to:
+            _, end_utc = local_date_bounds_utc(date_to)
+            sql += " AND created_at < ?"
+            params.append(end_utc)
     sql += " ORDER BY created_at DESC LIMIT ?"
     params.append(limit)
 
@@ -163,13 +167,7 @@ def get_by_subject(subject: str, limit: int = 10) -> list[dict]:
 # ===== 昨日记录（复盘用）=====
 def get_yesterday_knowledge() -> list[dict]:
     """拉出昨天 00:00 ~ 24:00（本地）创建的知识点。"""
-    now = datetime.now()
-    # 昨天 = 今天 - 1 天
-    from datetime import timedelta
-
-    yesterday = now - timedelta(days=1)
-    date_str = yesterday.strftime("%Y-%m-%d")
-    return get_by_date(date_str)
+    return get_by_date(yesterday_str())
 
 
 # ===== 更新 / 删除 =====

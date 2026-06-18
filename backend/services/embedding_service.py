@@ -17,6 +17,7 @@ from config import (
     SEARCH_DEFAULT_TOP_K,
 )
 from database import get_connection
+from services.time_utils import to_local_display
 
 # ===== 内存缓存（短期去重，省 API 调用）=====
 _embedding_cache: dict[str, tuple[list[float], float]] = {}
@@ -149,7 +150,7 @@ def search_similar(
                 "content": row["content"],
                 "subject": row["subject"],
                 "tags": json.loads(row["tags"] or "[]"),
-                "created_at": row["created_at"],
+                "created_at": to_local_display(row["created_at"]),
             }
         )
     return results

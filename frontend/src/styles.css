@@ -24,6 +24,10 @@ a {
   border-right: 1px solid #e7eaf0;
 }
 
+.mobile-nav-drawer .ant-drawer-content {
+  background: #ffffff;
+}
+
 .brand-block {
   display: flex;
   align-items: center;
@@ -332,8 +336,70 @@ a {
 
 .review-markdown {
   margin: 0 !important;
-  white-space: pre-wrap;
   word-break: break-word;
+}
+
+.review-markdown > :first-child {
+  margin-top: 0;
+}
+
+.review-markdown > :last-child {
+  margin-bottom: 0;
+}
+
+.review-markdown h1,
+.review-markdown h2,
+.review-markdown h3 {
+  margin: 18px 0 10px;
+  color: #0f172a;
+  line-height: 1.35;
+}
+
+.review-markdown h1 {
+  font-size: 22px;
+}
+
+.review-markdown h2 {
+  font-size: 19px;
+}
+
+.review-markdown h3 {
+  font-size: 16px;
+}
+
+.review-markdown p,
+.review-markdown ol,
+.review-markdown ul {
+  margin: 0 0 12px;
+}
+
+.review-markdown ol,
+.review-markdown ul {
+  padding-left: 22px;
+}
+
+.review-markdown li {
+  margin: 6px 0;
+}
+
+.review-markdown code {
+  padding: 2px 5px;
+  color: #0f172a;
+  background: #eef2f7;
+  border-radius: 4px;
+}
+
+.review-markdown pre {
+  overflow: auto;
+  padding: 12px;
+  background: #0f172a;
+  border-radius: 6px;
+}
+
+.review-markdown pre code {
+  padding: 0;
+  color: #e5e7eb;
+  background: transparent;
 }
 
 .review-item {
@@ -350,6 +416,10 @@ a {
 @media (max-width: 900px) {
   .app-header {
     padding: 0 14px;
+  }
+
+  .header-links {
+    display: none;
   }
 
   .filter-bar {
