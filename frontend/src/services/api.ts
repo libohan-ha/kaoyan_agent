@@ -1,5 +1,6 @@
 import type {
   ChatMode,
+  KnowledgeCreatePayload,
   KnowledgeItem,
   KnowledgePreview,
   ReviewLog,
@@ -35,6 +36,16 @@ export async function previewKnowledge(content: string): Promise<KnowledgePrevie
 export async function confirmKnowledge(payload: KnowledgePreview): Promise<KnowledgeItem> {
   return readJson(
     await fetch(`${API_BASE}/api/knowledge/confirm`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    })
+  );
+}
+
+export async function createKnowledge(payload: KnowledgeCreatePayload): Promise<KnowledgeItem> {
+  return readJson(
+    await fetch(`${API_BASE}/api/knowledge`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)

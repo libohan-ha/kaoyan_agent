@@ -12,9 +12,10 @@ import {
   Typography
 } from "antd";
 import dayjs from "dayjs";
-import { ReloadOutlined, SearchOutlined } from "@ant-design/icons";
+import { PlusOutlined, ReloadOutlined, SearchOutlined } from "@ant-design/icons";
 import KnowledgeTable from "../components/KnowledgeTable";
 import {
+  createKnowledge,
   deleteKnowledge,
   getSubjects,
   getTags,
@@ -51,7 +52,10 @@ export default function KnowledgePage() {
   const [tag, setTag] = useState<string | undefined>();
   const [date, setDate] = useState<string | undefined>();
   const [editing, setEditing] = useState<KnowledgeItem | null>(null);
-  const [form] = Form.useForm<KnowledgePreview>();
+  const [manualOpen, setManualOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [editForm] = Form.useForm<KnowledgePreview>();
+  const [manualForm] = Form.useForm<KnowledgePreview>();
 
   const subjectOptions = useMemo(
     () => subjects.map((item) => ({ label: item.name, value: item.name })),
@@ -125,7 +129,7 @@ export default function KnowledgePage() {
 
   const openEdit = (item: KnowledgeItem) => {
     setEditing(item);
-    form.setFieldsValue({
+    editForm.setFieldsValue({
       content: item.content,
       subject: item.subject,
       tags: item.tags
@@ -134,7 +138,7 @@ export default function KnowledgePage() {
 
   const saveEdit = async () => {
     if (!editing) return;
-    const values = await form.validateFields();
+    const values = await editForm.validateFields();
     try {
       await updateKnowledge(editing.id, values);
       message.success("已更新");
@@ -144,6 +148,37 @@ export default function KnowledgePage() {
       void load(currentFilters());
     } catch (error) {
       message.error(error instanceof Error ? error.message : "更新失败");
+    }
+  };
+
+  const openManualCreate = () => {
+    manualForm.setFieldsValue({
+      content: "",
+      subject: subject ?? subjects[0]?.name ?? "其他",
+      tags: []
+    });
+    setManualOpen(true);
+  };
+
+  const saveManual = async () => {
+    const values = await manualForm.validateFields();
+    setCreating(true);
+    try {
+      const item = await createKnowledge({
+        ...values,
+        tags: values.tags ?? [],
+        auto_categorize: false
+      });
+      message.success(`已保存 #${item.id}`);
+      setManualOpen(false);
+      manualForm.resetFields();
+      void refreshMeta();
+      void refreshCounts();
+      void load(currentFilters());
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : "保存失败");
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -174,7 +209,17 @@ export default function KnowledgePage() {
           <Typography.Title level={3}>知识库</Typography.Title>
           <Typography.Text type="secondary">共 {items.length} 条当前结果</Typography.Text>
         </div>
-        <Statistic title="已加载" value={items.length} />
+        <Space align="center">
+          <Statistic title="已加载" value={items.length} />
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            aria-label="手动保存"
+            onClick={openManualCreate}
+          >
+            手动保存
+          </Button>
+        </Space>
       </div>
 
       <div className="knowledge-layout">
@@ -267,7 +312,30 @@ export default function KnowledgePage() {
         onCancel={() => setEditing(null)}
         onOk={saveEdit}
       >
-        <Form form={form} layout="vertical">
+        <Form form={editForm} layout="vertical">
+          <Form.Item name="content" label="内容" rules={[{ required: true, message: "请输入内容" }]}>
+            <Input.TextArea autoSize={{ minRows: 4, maxRows: 8 }} />
+          </Form.Item>
+          <Form.Item name="subject" label="学科" rules={[{ required: true, message: "请选择学科" }]}>
+            <Select options={subjectOptions} />
+          </Form.Item>
+          <Form.Item name="tags" label="标签">
+            <Select mode="tags" options={tags.map((item) => ({ label: item, value: item }))} />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title="手动保存知识点"
+        open={manualOpen}
+        okText="保存"
+        cancelText="取消"
+        confirmLoading={creating}
+        okButtonProps={{ "aria-label": "保存" }}
+        onCancel={() => setManualOpen(false)}
+        onOk={saveManual}
+      >
+        <Form form={manualForm} layout="vertical">
           <Form.Item name="content" label="内容" rules={[{ required: true, message: "请输入内容" }]}>
             <Input.TextArea autoSize={{ minRows: 4, maxRows: 8 }} />
           </Form.Item>

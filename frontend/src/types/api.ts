@@ -17,6 +17,10 @@ export interface KnowledgePreview {
   tags: string[];
 }
 
+export interface KnowledgeCreatePayload extends KnowledgePreview {
+  auto_categorize?: boolean;
+}
+
 export interface SubjectItem {
   id: number;
   name: SubjectName | string;
