@@ -7,7 +7,11 @@ import ChatPage from "./pages/ChatPage";
 import KnowledgePage from "./pages/KnowledgePage";
 import ReviewPage from "./pages/ReviewPage";
 import { healthCheck, listSessions } from "./services/api";
-import { CHAT_SESSIONS_UPDATED_EVENT, LAST_SESSION_KEY } from "./sessionState";
+import {
+  CHAT_NEW_SESSION_EVENT,
+  CHAT_SESSIONS_UPDATED_EVENT,
+  LAST_SESSION_KEY
+} from "./sessionState";
 import type { ChatSession } from "./types/api";
 
 const { Header, Content, Sider } = Layout;
@@ -60,6 +64,7 @@ function Shell() {
   const startNewChat = () => {
     window.localStorage.removeItem(LAST_SESSION_KEY);
     navigate("/chat?new=1");
+    window.dispatchEvent(new Event(CHAT_NEW_SESSION_EVENT));
     setMobileNavOpen(false);
   };
 
@@ -103,7 +108,12 @@ function Shell() {
       <div className="session-sidebar-body">
         <div className="session-sidebar-header">
           <Typography.Text strong>对话列表</Typography.Text>
-          <Button size="small" icon={<PlusOutlined />} onClick={startNewChat}>
+          <Button
+            size="small"
+            icon={<PlusOutlined />}
+            aria-label="新对话"
+            onClick={startNewChat}
+          >
             新对话
           </Button>
         </div>

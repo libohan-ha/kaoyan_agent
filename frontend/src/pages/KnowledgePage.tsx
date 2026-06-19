@@ -26,11 +26,11 @@ import {
 import type { KnowledgeItem, KnowledgePreview, SubjectItem } from "../types/api";
 
 const subjectColors: Record<string, string> = {
-  政治: "#dc2626",
-  英语: "#0891b2",
-  数学: "#7c3aed",
-  计算机: "#2563eb",
-  其他: "#64748b"
+  政治: "#c1666b",
+  英语: "#5b9aa0",
+  数学: "#8a7290",
+  计算机: "#5a8dee",
+  其他: "#a08c6a"
 };
 
 interface KnowledgeFilters {

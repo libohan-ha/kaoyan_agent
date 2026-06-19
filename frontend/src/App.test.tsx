@@ -1,7 +1,9 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import App from "./App";
+
+let mockSessions: Array<{ id: number; title: string; updated_at: string }> = [];
 
 function mockDesktopViewport() {
   vi.stubGlobal(
@@ -24,6 +26,7 @@ function mockDesktopViewport() {
 
 beforeEach(() => {
   window.localStorage.clear();
+  mockSessions = [{ id: 12, title: "树的高度", updated_at: "2026-06-19 10:00:00" }];
   vi.stubGlobal(
     "fetch",
     vi.fn((input: RequestInfo | URL) => {
@@ -32,7 +35,26 @@ beforeEach(() => {
         return Promise.resolve({
           ok: true,
           json: async () => ({
-            sessions: [{ id: 12, title: "树的高度", updated_at: "2026-06-19 10:00:00" }]
+            sessions: mockSessions
+          })
+        });
+      }
+      if (url.endsWith("/api/sessions/12")) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            session: { id: 12, title: "树的高度", created_at: "2026-06-19 10:00:00" },
+            messages: [
+              {
+                id: 101,
+                role: "user",
+                content: "树的高度怎么求",
+                matched_knowledge: [],
+                preview: null,
+                thoughts: [],
+                created_at: "2026-06-19 10:00:01"
+              }
+            ]
           })
         });
       }
@@ -51,10 +73,11 @@ afterEach(() => {
 
 test("mobile navigation toggle opens and closes the drawer", async () => {
   const user = userEvent.setup();
+  mockSessions = [];
   render(<App />);
 
   await user.click(screen.getByRole("button", { name: "打开导航" }));
-  expect(screen.getByRole("button", { name: "关闭导航" })).toBeInTheDocument();
+  expect(await screen.findByRole("button", { name: "关闭导航" })).toBeInTheDocument();
 
   await user.click(screen.getByRole("button", { name: "关闭导航" }));
   expect(screen.getByRole("button", { name: "打开导航" })).toBeInTheDocument();
@@ -70,4 +93,18 @@ test("left sidebar shows chat sessions instead of page navigation", async () => 
   expect(sidebar).toHaveTextContent("树的高度");
   expect(sidebar).not.toHaveTextContent("知识库");
   expect(sidebar).not.toHaveTextContent("复盘");
+});
+
+test("left sidebar new chat clears the loaded conversation", async () => {
+  const user = userEvent.setup();
+  mockDesktopViewport();
+  render(<App />);
+
+  const sidebar = await screen.findByRole("complementary", { name: "对话列表" });
+  expect(await screen.findByText("树的高度怎么求")).toBeInTheDocument();
+
+  await user.click(within(sidebar).getByRole("button", { name: /新对话/ }));
+
+  await waitFor(() => expect(screen.queryByText("树的高度怎么求")).not.toBeInTheDocument());
+  expect(screen.getByText("暂无对话")).toBeInTheDocument();
 });

@@ -11,6 +11,14 @@ interface Props {
   onDelete?: (item: KnowledgeItem) => void;
 }
 
+const subjectColors: Record<string, string> = {
+  政治: "#c1666b",
+  英语: "#5b9aa0",
+  数学: "#8a7290",
+  计算机: "#5a8dee",
+  其他: "#a08c6a"
+};
+
 export default function KnowledgeTable({ data, loading, onEdit, onDelete }: Props) {
   const [detailItem, setDetailItem] = useState<KnowledgeItem | null>(null);
 
@@ -19,6 +27,8 @@ export default function KnowledgeTable({ data, loading, onEdit, onDelete }: Prop
     onEdit?.(detailItem);
     setDetailItem(null);
   };
+
+  const subjectColor = (subject: string) => subjectColors[subject] ?? "#a08c6a";
 
   const columns: ColumnsType<KnowledgeItem> = [
     {
@@ -42,7 +52,11 @@ export default function KnowledgeTable({ data, loading, onEdit, onDelete }: Prop
       title: "学科",
       dataIndex: "subject",
       width: 96,
-      render: (subject: string) => <Tag color="blue">{subject}</Tag>
+      render: (subject: string) => (
+        <Tag color={subjectColor(subject)} style={{ color: "#fff", border: "none" }}>
+          {subject}
+        </Tag>
+      )
     },
     {
       title: "标签",
@@ -114,7 +128,9 @@ export default function KnowledgeTable({ data, loading, onEdit, onDelete }: Prop
               {detailItem.content}
             </Typography.Paragraph>
             <Space size={[6, 6]} wrap>
-              <Tag color="blue">{detailItem.subject}</Tag>
+              <Tag color={subjectColor(detailItem.subject)} style={{ color: "#fff", border: "none" }}>
+                {detailItem.subject}
+              </Tag>
               {detailItem.tags.map((tag) => (
                 <Tag key={tag}>{tag}</Tag>
               ))}

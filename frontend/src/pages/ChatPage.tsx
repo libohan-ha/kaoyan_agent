@@ -15,7 +15,11 @@ import {
 import { PlusOutlined, SendOutlined } from "@ant-design/icons";
 import KnowledgePreviewCard from "../components/KnowledgePreviewCard";
 import { confirmKnowledge, getSession, listSessions, streamChat } from "../services/api";
-import { CHAT_SESSIONS_UPDATED_EVENT, LAST_SESSION_KEY } from "../sessionState";
+import {
+  CHAT_NEW_SESSION_EVENT,
+  CHAT_SESSIONS_UPDATED_EVENT,
+  LAST_SESSION_KEY
+} from "../sessionState";
 import type {
   ChatMessage,
   ChatMode,
@@ -65,13 +69,23 @@ export default function ChatPage() {
     const value = Number(raw);
     return Number.isInteger(value) && value > 0 ? value : undefined;
   }, [searchParams]);
-  const isNewChatRequest = searchParams.get("new") === "1";
+  const isNewChatRequest = searchParams.has("new");
 
   const updateAssistant = (id: string, patch: Partial<ChatMessage>) => {
     setMessages((items) =>
       items.map((item) => (item.id === id ? { ...item, ...patch } : item))
     );
   };
+
+  const resetChatState = useCallback(() => {
+    sessionIdRef.current = undefined;
+    window.localStorage.removeItem(LAST_SESSION_KEY);
+    setSessionTitle("新对话");
+    setMessages([]);
+    setInput("");
+    setSavingPreviewId(null);
+    setHistoryLoading(false);
+  }, []);
 
   const applySession = useCallback(
     (result: { session: ChatSession; messages: StoredChatMessage[] }) => {
@@ -115,6 +129,17 @@ export default function ChatPage() {
   }, [applySession, message, sessionIdFromUrl]);
 
   useEffect(() => {
+    if (isNewChatRequest) resetChatState();
+  }, [isNewChatRequest, resetChatState]);
+
+  useEffect(() => {
+    window.addEventListener(CHAT_NEW_SESSION_EVENT, resetChatState);
+    return () => {
+      window.removeEventListener(CHAT_NEW_SESSION_EVENT, resetChatState);
+    };
+  }, [resetChatState]);
+
+  useEffect(() => {
     if (initialRestoreDoneRef.current) return;
     initialRestoreDoneRef.current = true;
     if (sessionIdFromUrl || isNewChatRequest) return;
@@ -153,11 +178,7 @@ export default function ChatPage() {
   }, [applySession, isNewChatRequest, loadSession, navigate, sessionIdFromUrl]);
 
   const newChat = () => {
-    sessionIdRef.current = undefined;
-    window.localStorage.removeItem(LAST_SESSION_KEY);
-    setSessionTitle("新对话");
-    setMessages([]);
-    setInput("");
+    resetChatState();
     navigate("/chat?new=1");
   };
 
