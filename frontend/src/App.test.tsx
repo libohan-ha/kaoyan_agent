@@ -133,7 +133,7 @@ test("left sidebar new chat clears the loaded conversation", async () => {
   await user.click(within(sidebar).getByRole("button", { name: /新对话/ }));
 
   await waitFor(() => expect(screen.queryByText("树的高度怎么求")).not.toBeInTheDocument());
-  expect(screen.getByText("暂无对话")).toBeInTheDocument();
+  expect(screen.getByText("今天学了什么？")).toBeInTheDocument();
 });
 
 test("left sidebar can delete a chat session", async () => {

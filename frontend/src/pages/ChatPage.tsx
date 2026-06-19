@@ -15,6 +15,7 @@ import {
 import { PlusOutlined, SendOutlined } from "@ant-design/icons";
 import KnowledgePreviewCard from "../components/KnowledgePreviewCard";
 import MarkdownContent from "../components/MarkdownContent";
+import SourceCitationCards from "../components/SourceCitationCards";
 import { confirmKnowledge, getSession, listSessions, streamChat } from "../services/api";
 import {
   CHAT_NEW_SESSION_EVENT,
@@ -33,6 +34,33 @@ const modeOptions = [
   { label: "自动", value: "auto" },
   { label: "保存", value: "save" },
   { label: "提问", value: "ask" }
+];
+
+const starterPrompts: Array<{ title: string; description: string; prompt: string; mode: ChatMode }> = [
+  {
+    title: "记录一个知识点",
+    description: "AI 自动分类、打标签，确认后入库",
+    prompt: "今天学了 ",
+    mode: "save"
+  },
+  {
+    title: "问问我的笔记",
+    description: "优先检索你自己记录过的内容",
+    prompt: "根据我的笔记，",
+    mode: "ask"
+  },
+  {
+    title: "今日复盘",
+    description: "看看今天新增的知识点",
+    prompt: "今日复盘",
+    mode: "auto"
+  },
+  {
+    title: "最近学了什么",
+    description: "回顾最近一段时间的记录",
+    prompt: "最近一周我学了什么？",
+    mode: "auto"
+  }
 ];
 
 function nextId() {
@@ -183,6 +211,11 @@ export default function ChatPage() {
     navigate("/chat?new=1");
   };
 
+  const useStarterPrompt = (prompt: (typeof starterPrompts)[number]) => {
+    setInput(prompt.prompt);
+    setMode(prompt.mode);
+  };
+
   const send = async () => {
     const text = input.trim();
     if (!text || loading) return;
@@ -281,7 +314,27 @@ export default function ChatPage() {
             <Spin />
           </div>
         ) : messages.length === 0 ? (
-          <Empty description="暂无对话" className="empty-state" />
+          <div className="chat-hero">
+            <div className="chat-hero-copy">
+              <Typography.Title level={1}>今天学了什么？</Typography.Title>
+              <Typography.Paragraph>
+                随手记一句，AI 帮你分类；忘了就问，它会优先翻你自己的知识库。
+              </Typography.Paragraph>
+            </div>
+            <div className="starter-prompt-grid">
+              {starterPrompts.map((prompt) => (
+                <button
+                  key={prompt.title}
+                  type="button"
+                  className="starter-prompt-card"
+                  onClick={() => useStarterPrompt(prompt)}
+                >
+                  <strong>{prompt.title}</strong>
+                  <span>{prompt.description}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         ) : (
           messages.map((item) => (
             <div key={item.id} className={`message-row ${item.role}`}>
@@ -304,14 +357,7 @@ export default function ChatPage() {
                   </Space>
                 )}
                 {item.matched && item.matched.length > 0 && (
-                  <div className="matched-list">
-                    {item.matched.map((match) => (
-                      <div key={match.id} className="matched-item">
-                        <Tag color="geekblue">#{match.id}</Tag>
-                        <span>{match.content}</span>
-                      </div>
-                    ))}
-                  </div>
+                  <SourceCitationCards items={item.matched} />
                 )}
                 {item.preview && (
                   <KnowledgePreviewCard
@@ -328,11 +374,17 @@ export default function ChatPage() {
       </section>
 
       <section className="composer-panel">
-        <Segmented
-          value={mode}
-          options={modeOptions}
-          onChange={(value) => setMode(value as ChatMode)}
-        />
+        <div className="composer-mode">
+          <Typography.Text strong>模式</Typography.Text>
+          <Typography.Text type="secondary">
+            自动识别记录、提问或复盘，也可以手动指定
+          </Typography.Text>
+          <Segmented
+            value={mode}
+            options={modeOptions}
+            onChange={(value) => setMode(value as ChatMode)}
+          />
+        </div>
         <Input.TextArea
           value={input}
           autoSize={{ minRows: 4, maxRows: 8 }}

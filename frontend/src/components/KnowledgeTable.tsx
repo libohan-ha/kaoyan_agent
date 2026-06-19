@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { Button, Modal, Popconfirm, Space, Table, Tag, Typography } from "antd";
-import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
-import type { ColumnsType } from "antd/es/table";
+import { Button, Empty, Modal, Popconfirm, Space, Spin, Tag, Typography } from "antd";
+import { DeleteOutlined, EditOutlined, FileTextOutlined } from "@ant-design/icons";
 import type { KnowledgeItem } from "../types/api";
 
 interface Props {
@@ -30,92 +29,66 @@ export default function KnowledgeTable({ data, loading, onEdit, onDelete }: Prop
 
   const subjectColor = (subject: string) => subjectColors[subject] ?? "#a08c6a";
 
-  const columns: ColumnsType<KnowledgeItem> = [
-    {
-      title: "内容",
-      dataIndex: "content",
-      key: "content",
-      render: (content: string, item) => (
-        <Button
-          type="text"
-          className="knowledge-content-button"
-          aria-label="展开知识点详情"
-          onClick={() => setDetailItem(item)}
-        >
-          <Typography.Paragraph className="knowledge-content" ellipsis={{ rows: 3 }}>
-            {content}
-          </Typography.Paragraph>
-        </Button>
-      )
-    },
-    {
-      title: "学科",
-      dataIndex: "subject",
-      width: 96,
-      render: (subject: string) => (
-        <Tag color={subjectColor(subject)} style={{ color: "#fff", border: "none" }}>
-          {subject}
-        </Tag>
-      )
-    },
-    {
-      title: "标签",
-      dataIndex: "tags",
-      width: 260,
-      render: (tags: string[]) => (
-        <Space size={[4, 4]} wrap>
-          {tags.map((tag) => (
-            <Tag key={tag}>{tag}</Tag>
-          ))}
-        </Space>
-      )
-    },
-    {
-      title: "分数",
-      dataIndex: "score",
-      width: 88,
-      render: (score?: number) => (typeof score === "number" ? score.toFixed(4) : "-")
-    },
-    {
-      title: "创建时间",
-      dataIndex: "created_at",
-      width: 172
-    },
-    {
-      title: "操作",
-      key: "action",
-      width: 116,
-      render: (_, item) => (
-        <Space>
-          <Button
-            size="small"
-            icon={<EditOutlined />}
-            aria-label="编辑"
-            onClick={() => onEdit?.(item)}
-          />
-          <Popconfirm
-            title="删除这条知识点？"
-            okText="删除"
-            cancelText="取消"
-            onConfirm={() => onDelete?.(item)}
-          >
-            <Button size="small" danger icon={<DeleteOutlined />} aria-label="删除" />
-          </Popconfirm>
-        </Space>
-      )
-    }
-  ];
-
   return (
     <>
-      <Table
-        rowKey="id"
-        columns={columns}
-        dataSource={data}
-        loading={loading}
-        pagination={{ pageSize: 8, showSizeChanger: false }}
-        scroll={{ x: 980 }}
-      />
+      <div className="knowledge-card-list" aria-busy={loading}>
+        {loading ? (
+          <div className="knowledge-card-loading">
+            <Spin />
+          </div>
+        ) : data.length === 0 ? (
+          <Empty description="暂无知识点" />
+        ) : (
+          data.map((item) => (
+            <article key={item.id} className="knowledge-card">
+              <button
+                type="button"
+                className="knowledge-card-main"
+                aria-label="展开知识点详情"
+                onClick={() => setDetailItem(item)}
+              >
+                <span className="knowledge-card-icon">
+                  <FileTextOutlined />
+                </span>
+                <span className="knowledge-card-body">
+                  <span className="knowledge-card-topline">
+                    <Tag color={subjectColor(item.subject)} style={{ color: "#fff", border: "none" }}>
+                      {item.subject}
+                    </Tag>
+                    <span>#{item.id}</span>
+                    <span>{item.created_at}</span>
+                    {typeof item.score === "number" && <span>相关度 {item.score.toFixed(3)}</span>}
+                  </span>
+                  <Typography.Paragraph className="knowledge-card-content" ellipsis={{ rows: 3 }}>
+                    {item.content}
+                  </Typography.Paragraph>
+                  <span className="knowledge-card-tags">
+                    {item.tags.map((tag) => (
+                      <Tag key={tag}>{tag}</Tag>
+                    ))}
+                  </span>
+                </span>
+              </button>
+              <Space className="knowledge-card-actions">
+                <Button
+                  size="small"
+                  icon={<EditOutlined />}
+                  aria-label="编辑"
+                  onClick={() => onEdit?.(item)}
+                />
+                <Popconfirm
+                  title="删除这条知识点？"
+                  okText="删除"
+                  cancelText="取消"
+                  onConfirm={() => onDelete?.(item)}
+                >
+                  <Button size="small" danger icon={<DeleteOutlined />} aria-label="删除" />
+                </Popconfirm>
+              </Space>
+            </article>
+          ))
+        )}
+      </div>
       <Modal
         title="详情"
         open={Boolean(detailItem)}

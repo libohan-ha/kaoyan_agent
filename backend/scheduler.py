@@ -62,7 +62,6 @@ def shutdown_scheduler():
 
 def trigger_review_now() -> dict:
     """立即触发一次复盘（手动测试用，给 API 调）。"""
-    _daily_review_job()
     from services import review_service
 
     return review_service.run_daily_review()
