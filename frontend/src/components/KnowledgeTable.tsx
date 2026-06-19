@@ -1,4 +1,5 @@
-import { Button, Popconfirm, Space, Table, Tag, Typography } from "antd";
+import { useState } from "react";
+import { Button, Modal, Popconfirm, Space, Table, Tag, Typography } from "antd";
 import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import type { KnowledgeItem } from "../types/api";
@@ -11,15 +12,30 @@ interface Props {
 }
 
 export default function KnowledgeTable({ data, loading, onEdit, onDelete }: Props) {
+  const [detailItem, setDetailItem] = useState<KnowledgeItem | null>(null);
+
+  const editFromDetail = () => {
+    if (!detailItem) return;
+    onEdit?.(detailItem);
+    setDetailItem(null);
+  };
+
   const columns: ColumnsType<KnowledgeItem> = [
     {
       title: "内容",
       dataIndex: "content",
       key: "content",
-      render: (content: string) => (
-        <Typography.Paragraph className="knowledge-content" ellipsis={{ rows: 3 }}>
-          {content}
-        </Typography.Paragraph>
+      render: (content: string, item) => (
+        <Button
+          type="text"
+          className="knowledge-content-button"
+          aria-label="展开知识点详情"
+          onClick={() => setDetailItem(item)}
+        >
+          <Typography.Paragraph className="knowledge-content" ellipsis={{ rows: 3 }}>
+            {content}
+          </Typography.Paragraph>
+        </Button>
       )
     },
     {
@@ -77,13 +93,46 @@ export default function KnowledgeTable({ data, loading, onEdit, onDelete }: Prop
   ];
 
   return (
-    <Table
-      rowKey="id"
-      columns={columns}
-      dataSource={data}
-      loading={loading}
-      pagination={{ pageSize: 8, showSizeChanger: false }}
-      scroll={{ x: 980 }}
-    />
+    <>
+      <Table
+        rowKey="id"
+        columns={columns}
+        dataSource={data}
+        loading={loading}
+        pagination={{ pageSize: 8, showSizeChanger: false }}
+        scroll={{ x: 980 }}
+      />
+      <Modal
+        title="详情"
+        open={Boolean(detailItem)}
+        onCancel={() => setDetailItem(null)}
+        footer={null}
+      >
+        {detailItem && (
+          <div aria-label="知识点详情" className="knowledge-detail">
+            <Typography.Paragraph className="knowledge-detail-content">
+              {detailItem.content}
+            </Typography.Paragraph>
+            <Space size={[6, 6]} wrap>
+              <Tag color="blue">{detailItem.subject}</Tag>
+              {detailItem.tags.map((tag) => (
+                <Tag key={tag}>{tag}</Tag>
+              ))}
+            </Space>
+            <div className="knowledge-detail-actions">
+              <Button onClick={() => setDetailItem(null)}>关闭</Button>
+              <Button
+                type="primary"
+                icon={<EditOutlined />}
+                aria-label="编辑"
+                onClick={editFromDetail}
+              >
+                编辑
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+    </>
   );
 }

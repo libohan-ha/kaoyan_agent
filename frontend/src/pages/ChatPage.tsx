@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   App,
   Button,
@@ -14,15 +15,20 @@ import {
 import { PlusOutlined, SendOutlined } from "@ant-design/icons";
 import KnowledgePreviewCard from "../components/KnowledgePreviewCard";
 import { confirmKnowledge, getSession, listSessions, streamChat } from "../services/api";
-import type { ChatMessage, ChatMode, KnowledgePreview, StoredChatMessage } from "../types/api";
+import { CHAT_SESSIONS_UPDATED_EVENT, LAST_SESSION_KEY } from "../sessionState";
+import type {
+  ChatMessage,
+  ChatMode,
+  ChatSession,
+  KnowledgePreview,
+  StoredChatMessage
+} from "../types/api";
 
 const modeOptions = [
   { label: "自动", value: "auto" },
   { label: "保存", value: "save" },
   { label: "提问", value: "ask" }
 ];
-
-const LAST_SESSION_KEY = "kaoyan-agent:last-session-id";
 
 function nextId() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -41,6 +47,8 @@ function mapStoredMessage(item: StoredChatMessage): ChatMessage {
 
 export default function ChatPage() {
   const { message } = App.useApp();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [mode, setMode] = useState<ChatMode>("auto");
@@ -49,8 +57,15 @@ export default function ChatPage() {
   const [sessionTitle, setSessionTitle] = useState("新对话");
   const [savingPreviewId, setSavingPreviewId] = useState<string | null>(null);
   const sessionIdRef = useRef<number | undefined>();
+  const initialRestoreDoneRef = useRef(false);
 
   const canSend = useMemo(() => input.trim().length > 0 && !loading, [input, loading]);
+  const sessionIdFromUrl = useMemo(() => {
+    const raw = searchParams.get("session");
+    const value = Number(raw);
+    return Number.isInteger(value) && value > 0 ? value : undefined;
+  }, [searchParams]);
+  const isNewChatRequest = searchParams.get("new") === "1";
 
   const updateAssistant = (id: string, patch: Partial<ChatMessage>) => {
     setMessages((items) =>
@@ -58,15 +73,52 @@ export default function ChatPage() {
     );
   };
 
-  const loadSession = async (sessionId: number) => {
+  const applySession = useCallback(
+    (result: { session: ChatSession; messages: StoredChatMessage[] }) => {
+      sessionIdRef.current = result.session.id;
+      window.localStorage.setItem(LAST_SESSION_KEY, String(result.session.id));
+      setSessionTitle(result.session.title || "新对话");
+      setMessages(result.messages.map(mapStoredMessage));
+    },
+    []
+  );
+
+  const loadSession = useCallback(async (sessionId: number) => {
     const result = await getSession(sessionId);
-    sessionIdRef.current = result.session.id;
-    window.localStorage.setItem(LAST_SESSION_KEY, String(result.session.id));
-    setSessionTitle(result.session.title || "新对话");
-    setMessages(result.messages.map(mapStoredMessage));
-  };
+    applySession(result);
+    return result;
+  }, [applySession]);
 
   useEffect(() => {
+    if (!sessionIdFromUrl) return;
+    let cancelled = false;
+    const restoreFromUrl = async () => {
+      setHistoryLoading(true);
+      try {
+        const result = await getSession(sessionIdFromUrl);
+        if (cancelled) return;
+        applySession(result);
+      } catch {
+        if (!cancelled) {
+          window.localStorage.removeItem(LAST_SESSION_KEY);
+          message.error("加载会话失败");
+        }
+      } finally {
+        if (!cancelled) setHistoryLoading(false);
+      }
+    };
+
+    void restoreFromUrl();
+    return () => {
+      cancelled = true;
+    };
+  }, [applySession, message, sessionIdFromUrl]);
+
+  useEffect(() => {
+    if (initialRestoreDoneRef.current) return;
+    initialRestoreDoneRef.current = true;
+    if (sessionIdFromUrl || isNewChatRequest) return;
+
     let cancelled = false;
     const restore = async () => {
       setHistoryLoading(true);
@@ -75,9 +127,8 @@ export default function ChatPage() {
         if (stored) {
           const result = await getSession(stored);
           if (cancelled) return;
-          sessionIdRef.current = result.session.id;
-          setSessionTitle(result.session.title || "新对话");
-          setMessages(result.messages.map(mapStoredMessage));
+          applySession(result);
+          navigate(`/chat?session=${result.session.id}`, { replace: true });
           return;
         }
 
@@ -85,7 +136,8 @@ export default function ChatPage() {
         if (cancelled) return;
         const latest = result.sessions[0];
         if (latest) {
-          await loadSession(latest.id);
+          const session = await loadSession(latest.id);
+          if (!cancelled) navigate(`/chat?session=${session.session.id}`, { replace: true });
         }
       } catch {
         window.localStorage.removeItem(LAST_SESSION_KEY);
@@ -98,7 +150,7 @@ export default function ChatPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [applySession, isNewChatRequest, loadSession, navigate, sessionIdFromUrl]);
 
   const newChat = () => {
     sessionIdRef.current = undefined;
@@ -106,6 +158,7 @@ export default function ChatPage() {
     setSessionTitle("新对话");
     setMessages([]);
     setInput("");
+    navigate("/chat?new=1");
   };
 
   const send = async () => {
@@ -156,6 +209,8 @@ export default function ChatPage() {
       if (sessionId) {
         window.localStorage.setItem(LAST_SESSION_KEY, String(sessionId));
         if (sessionTitle === "新对话") setSessionTitle(text.slice(0, 24));
+        navigate(`/chat?session=${sessionId}`, { replace: true });
+        window.dispatchEvent(new Event(CHAT_SESSIONS_UPDATED_EVENT));
       }
     } catch (error) {
       updateAssistant(assistantId, {

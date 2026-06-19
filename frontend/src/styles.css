@@ -57,9 +57,76 @@ a {
   font-size: 12px;
 }
 
-.nav-menu {
-  border-inline-end: 0 !important;
-  padding: 10px;
+.session-sidebar-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+}
+
+.session-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.session-sidebar-loading {
+  display: grid;
+  min-height: 96px;
+  place-items: center;
+}
+
+.session-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.session-nav-item {
+  display: flex;
+  width: 100%;
+  min-height: 58px;
+  flex-direction: column;
+  gap: 4px;
+  align-items: stretch;
+  justify-content: center;
+  padding: 9px 10px;
+  color: #334155;
+  text-align: left;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.session-nav-item:hover {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.session-nav-item.active {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.session-nav-title {
+  overflow: hidden;
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.session-nav-meta {
+  overflow: hidden;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .app-header {
@@ -345,6 +412,45 @@ a {
 .knowledge-content {
   min-width: 360px;
   margin: 0 !important;
+}
+
+.knowledge-content-button {
+  display: block;
+  width: 100%;
+  height: auto;
+  padding: 0;
+  color: inherit;
+  text-align: left;
+  white-space: normal;
+}
+
+.knowledge-content-button:hover {
+  color: #1d4ed8 !important;
+  background: transparent !important;
+}
+
+.knowledge-content-button > span {
+  display: block;
+  width: 100%;
+}
+
+.knowledge-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.knowledge-detail-content {
+  margin-bottom: 0 !important;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.knowledge-detail-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 4px;
 }
 
 .full-width {

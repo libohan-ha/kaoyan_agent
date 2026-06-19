@@ -1,21 +1,22 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { NavLink, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { BrowserRouter } from "react-router-dom";
-import { Badge, Button, Drawer, Grid, Layout, Menu, Space, Typography } from "antd";
-import {
-  BookOutlined,
-  MenuOutlined,
-  MessageOutlined,
-  ReloadOutlined,
-  ScheduleOutlined
-} from "@ant-design/icons";
+import { Badge, Button, Drawer, Empty, Grid, Layout, Space, Spin, Typography } from "antd";
+import { MenuOutlined, PlusOutlined, ReloadOutlined } from "@ant-design/icons";
 import ChatPage from "./pages/ChatPage";
 import KnowledgePage from "./pages/KnowledgePage";
 import ReviewPage from "./pages/ReviewPage";
-import { healthCheck } from "./services/api";
+import { healthCheck, listSessions } from "./services/api";
+import { CHAT_SESSIONS_UPDATED_EVENT, LAST_SESSION_KEY } from "./sessionState";
+import type { ChatSession } from "./types/api";
 
 const { Header, Content, Sider } = Layout;
 const { useBreakpoint } = Grid;
+
+function formatSessionTime(session: ChatSession) {
+  const value = session.updated_at || session.created_at;
+  return value ? value.slice(5, 16) : "最近";
+}
 
 function Shell() {
   const location = useLocation();
@@ -23,22 +24,17 @@ function Shell() {
   const screens = useBreakpoint();
   const [serviceOnline, setServiceOnline] = useState<boolean | null>(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [sessions, setSessions] = useState<ChatSession[]>([]);
+  const [sessionsLoading, setSessionsLoading] = useState(false);
   const isMobile = !screens.lg;
 
-  const activeKey = useMemo(() => {
-    if (location.pathname.startsWith("/knowledge")) return "/knowledge";
-    if (location.pathname.startsWith("/review")) return "/review";
-    return "/chat";
-  }, [location.pathname]);
+  const selectedSessionId = useMemo(() => {
+    const value = new URLSearchParams(location.search).get("session");
+    const parsed = Number(value);
+    return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined;
+  }, [location.search]);
 
-  const navItems = useMemo(
-    () => [
-      { key: "/chat", icon: <MessageOutlined />, label: "对话" },
-      { key: "/knowledge", icon: <BookOutlined />, label: "知识库" },
-      { key: "/review", icon: <ScheduleOutlined />, label: "复盘" }
-    ],
-    []
-  );
+  const isChatRoute = location.pathname.startsWith("/chat");
 
   const checkService = async () => {
     try {
@@ -49,15 +45,49 @@ function Shell() {
     }
   };
 
+  const refreshSessions = useCallback(async () => {
+    setSessionsLoading(true);
+    try {
+      const result = await listSessions();
+      setSessions(result.sessions);
+    } catch {
+      setSessions([]);
+    } finally {
+      setSessionsLoading(false);
+    }
+  }, []);
+
+  const startNewChat = () => {
+    window.localStorage.removeItem(LAST_SESSION_KEY);
+    navigate("/chat?new=1");
+    setMobileNavOpen(false);
+  };
+
+  const openSession = (sessionId: number) => {
+    navigate(`/chat?session=${sessionId}`);
+    setMobileNavOpen(false);
+  };
+
   useEffect(() => {
     void checkService();
   }, []);
 
   useEffect(() => {
-    setMobileNavOpen(false);
-  }, [location.pathname]);
+    void refreshSessions();
+    const onSessionsUpdated = () => {
+      void refreshSessions();
+    };
+    window.addEventListener(CHAT_SESSIONS_UPDATED_EVENT, onSessionsUpdated);
+    return () => {
+      window.removeEventListener(CHAT_SESSIONS_UPDATED_EVENT, onSessionsUpdated);
+    };
+  }, [refreshSessions]);
 
-  const navContent = (
+  useEffect(() => {
+    setMobileNavOpen(false);
+  }, [location.pathname, location.search]);
+
+  const sessionSidebarContent = (
     <>
       <div className="brand-block">
         <div className="brand-mark">研</div>
@@ -66,28 +96,51 @@ function Shell() {
             考研 Agent
           </Typography.Title>
           <Typography.Text type="secondary" className="brand-subtitle">
-            个人知识库
+            历史对话
           </Typography.Text>
         </div>
       </div>
-      <Menu
-        mode="inline"
-        selectedKeys={[activeKey]}
-        className="nav-menu"
-        items={navItems}
-        onClick={({ key }) => {
-          navigate(key);
-          setMobileNavOpen(false);
-        }}
-      />
+      <div className="session-sidebar-body">
+        <div className="session-sidebar-header">
+          <Typography.Text strong>对话列表</Typography.Text>
+          <Button size="small" icon={<PlusOutlined />} onClick={startNewChat}>
+            新对话
+          </Button>
+        </div>
+        {sessionsLoading ? (
+          <div className="session-sidebar-loading">
+            <Spin size="small" />
+          </div>
+        ) : sessions.length === 0 ? (
+          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无历史对话" />
+        ) : (
+          <div className="session-list">
+            {sessions.map((session) => (
+              <button
+                key={session.id}
+                type="button"
+                className={`session-nav-item ${
+                  isChatRoute && selectedSessionId === session.id ? "active" : ""
+                }`}
+                onClick={() => openSession(session.id)}
+              >
+                <span className="session-nav-title">{session.title || `会话 #${session.id}`}</span>
+                <span className="session-nav-meta">
+                  #{session.id} · {formatSessionTime(session)}
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     </>
   );
 
   return (
     <Layout className="app-shell">
       {!isMobile && (
-        <Sider width={220} className="app-sider">
-          {navContent}
+        <Sider width={240} className="app-sider" role="complementary" aria-label="对话列表">
+          {sessionSidebarContent}
         </Sider>
       )}
       <Drawer
@@ -99,7 +152,9 @@ function Shell() {
         closeIcon={null}
         styles={{ body: { padding: 0 } }}
       >
-        {navContent}
+        <div role="complementary" aria-label="对话列表">
+          {sessionSidebarContent}
+        </div>
       </Drawer>
 
       <Layout>
