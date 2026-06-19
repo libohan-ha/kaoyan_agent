@@ -228,6 +228,26 @@ a {
   font-weight: 600;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-actions a {
+  min-height: 36px;
+  padding: 7px 12px;
+  background: var(--bg-paper);
+  border: 1px solid var(--border-mid);
+  border-radius: 10px;
+  box-shadow: var(--shadow-sm);
+}
+
+.header-actions a.active {
+  background: var(--bg-active);
+  border-color: var(--brand-100);
+}
+
 .app-content {
   padding: 24px;
 }
@@ -723,6 +743,16 @@ a {
 
   .header-links {
     display: none;
+  }
+
+  .header-actions {
+    gap: 6px;
+  }
+
+  .header-actions a {
+    min-height: 34px;
+    padding: 6px 10px;
+    font-size: 14px;
   }
 
   .filter-bar {

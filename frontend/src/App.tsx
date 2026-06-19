@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { NavLink, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { BrowserRouter } from "react-router-dom";
-import { Badge, Button, Drawer, Empty, Grid, Layout, Space, Spin, Typography } from "antd";
-import { MenuOutlined, PlusOutlined, ReloadOutlined } from "@ant-design/icons";
+import { Button, Drawer, Empty, Grid, Layout, Space, Spin, Typography } from "antd";
+import { MenuOutlined, PlusOutlined } from "@ant-design/icons";
 import ChatPage from "./pages/ChatPage";
 import KnowledgePage from "./pages/KnowledgePage";
 import ReviewPage from "./pages/ReviewPage";
-import { healthCheck, listSessions } from "./services/api";
+import { listSessions } from "./services/api";
 import {
   CHAT_NEW_SESSION_EVENT,
   CHAT_SESSIONS_UPDATED_EVENT,
@@ -26,7 +26,6 @@ function Shell() {
   const location = useLocation();
   const navigate = useNavigate();
   const screens = useBreakpoint();
-  const [serviceOnline, setServiceOnline] = useState<boolean | null>(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [sessionsLoading, setSessionsLoading] = useState(false);
@@ -39,15 +38,6 @@ function Shell() {
   }, [location.search]);
 
   const isChatRoute = location.pathname.startsWith("/chat");
-
-  const checkService = async () => {
-    try {
-      const result = await healthCheck();
-      setServiceOnline(result.status === "ok");
-    } catch {
-      setServiceOnline(false);
-    }
-  };
 
   const refreshSessions = useCallback(async () => {
     setSessionsLoading(true);
@@ -72,10 +62,6 @@ function Shell() {
     navigate(`/chat?session=${sessionId}`);
     setMobileNavOpen(false);
   };
-
-  useEffect(() => {
-    void checkService();
-  }, []);
 
   useEffect(() => {
     void refreshSessions();
@@ -180,19 +166,12 @@ function Shell() {
             )}
             <Space size={16} className="header-links">
               <NavLink to="/chat">对话</NavLink>
-              <NavLink to="/knowledge">知识库</NavLink>
-              <NavLink to="/review">复盘</NavLink>
             </Space>
           </Space>
-          <Space>
-            <Badge
-              status={serviceOnline ? "success" : serviceOnline === false ? "error" : "default"}
-              text={serviceOnline ? "后端在线" : serviceOnline === false ? "后端离线" : "检测中"}
-            />
-            <Button icon={<ReloadOutlined />} onClick={checkService}>
-              刷新
-            </Button>
-          </Space>
+          <nav className="header-actions" aria-label="顶部快捷入口">
+            <NavLink to="/knowledge">知识库</NavLink>
+            <NavLink to="/review">复盘</NavLink>
+          </nav>
         </Header>
         <Content className="app-content">
           <Routes>
