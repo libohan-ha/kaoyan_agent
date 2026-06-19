@@ -14,6 +14,7 @@ import {
 } from "antd";
 import { PlusOutlined, SendOutlined } from "@ant-design/icons";
 import KnowledgePreviewCard from "../components/KnowledgePreviewCard";
+import MarkdownContent from "../components/MarkdownContent";
 import { confirmKnowledge, getSession, listSessions, streamChat } from "../services/api";
 import {
   CHAT_NEW_SESSION_EVENT,
@@ -288,9 +289,13 @@ export default function ChatPage() {
                 <Typography.Text className="message-role">
                   {item.role === "user" ? "你" : "Agent"}
                 </Typography.Text>
-                <Typography.Paragraph className="message-content">
-                  {item.content || (loading && item.role === "assistant" ? <Spin size="small" /> : "")}
-                </Typography.Paragraph>
+                {item.content ? (
+                  <MarkdownContent content={item.content} className="message-content chat-markdown" />
+                ) : loading && item.role === "assistant" ? (
+                  <div className="message-content">
+                    <Spin size="small" />
+                  </div>
+                ) : null}
                 {item.thoughts && item.thoughts.length > 0 && (
                   <Space size={[4, 4]} wrap className="thoughts-line">
                     {item.thoughts.map((thought) => (

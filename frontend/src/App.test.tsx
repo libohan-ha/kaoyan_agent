@@ -29,8 +29,16 @@ beforeEach(() => {
   mockSessions = [{ id: 12, title: "树的高度", updated_at: "2026-06-19 10:00:00" }];
   vi.stubGlobal(
     "fetch",
-    vi.fn((input: RequestInfo | URL) => {
+    vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
+      const method = init?.method ?? "GET";
+      if (url.endsWith("/api/sessions/12") && method === "DELETE") {
+        mockSessions = [];
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ ok: true, id: 12 })
+        });
+      }
       if (url.endsWith("/api/sessions")) {
         return Promise.resolve({
           ok: true,
@@ -126,4 +134,19 @@ test("left sidebar new chat clears the loaded conversation", async () => {
 
   await waitFor(() => expect(screen.queryByText("树的高度怎么求")).not.toBeInTheDocument());
   expect(screen.getByText("暂无对话")).toBeInTheDocument();
+});
+
+test("left sidebar can delete a chat session", async () => {
+  const user = userEvent.setup();
+  mockDesktopViewport();
+  render(<App />);
+
+  const sidebar = await screen.findByRole("complementary", { name: "对话列表" });
+  await user.click(within(sidebar).getByRole("button", { name: "删除会话 树的高度" }));
+
+  await waitFor(() => expect(within(sidebar).queryByText("树的高度")).not.toBeInTheDocument());
+  expect(globalThis.fetch).toHaveBeenCalledWith(
+    "/api/sessions/12",
+    expect.objectContaining({ method: "DELETE" })
+  );
 });

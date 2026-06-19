@@ -139,6 +139,10 @@ export async function getSession(
   return readJson(await fetch(`${API_BASE}/api/sessions/${sessionId}`));
 }
 
+export async function deleteSession(sessionId: number): Promise<{ ok: boolean; id: number }> {
+  return readJson(await fetch(`${API_BASE}/api/sessions/${sessionId}`, { method: "DELETE" }));
+}
+
 export async function streamChat(
   payload: { message: string; mode: ChatMode; session_id?: number },
   onEvent: (event: SseEvent) => void

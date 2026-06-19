@@ -86,3 +86,26 @@ test("loads the chat session named in the URL before local storage", async () =>
   expect(apiMocks.getSession).not.toHaveBeenCalledWith(12);
   expect(await screen.findByText("DFS 和 BFS 区别")).toBeInTheDocument();
 });
+
+test("renders chat message content as markdown", async () => {
+  apiMocks.getSession.mockResolvedValueOnce({
+    session: { id: 34, title: "Markdown 对话", created_at: "2026-06-19 11:00:00" },
+    messages: [
+      {
+        id: 201,
+        role: "assistant",
+        content: "### 复盘要点\n\n- **重点**：用递归\n- `height(root)`",
+        matched_knowledge: [],
+        preview: null,
+        thoughts: [],
+        created_at: "2026-06-19 11:00:01"
+      }
+    ]
+  });
+
+  renderChatPage("/chat?session=34");
+
+  expect(await screen.findByRole("heading", { name: "复盘要点" })).toBeInTheDocument();
+  expect(screen.getByText("重点")).toBeInTheDocument();
+  expect(screen.getByText("height(root)")).toBeInTheDocument();
+});

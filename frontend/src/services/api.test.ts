@@ -1,5 +1,5 @@
 import { afterEach, expect, test, vi } from "vitest";
-import { createKnowledge, getSession } from "./api";
+import { createKnowledge, deleteSession, getSession } from "./api";
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -63,4 +63,19 @@ test("loads a persisted chat session by id", async () => {
   await getSession(12);
 
   expect(fetchMock).toHaveBeenCalledWith("/api/sessions/12");
+});
+
+test("deletes a persisted chat session by id", async () => {
+  const fetchMock = vi.fn().mockResolvedValue({
+    ok: true,
+    json: async () => ({ ok: true, id: 12 })
+  });
+  vi.stubGlobal("fetch", fetchMock);
+
+  await deleteSession(12);
+
+  expect(fetchMock).toHaveBeenCalledWith(
+    "/api/sessions/12",
+    expect.objectContaining({ method: "DELETE" })
+  );
 });

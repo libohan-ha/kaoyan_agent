@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { NavLink, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { BrowserRouter } from "react-router-dom";
-import { Button, Drawer, Empty, Grid, Layout, Space, Spin, Typography } from "antd";
-import { MenuOutlined, PlusOutlined } from "@ant-design/icons";
+import { Button, Drawer, Empty, Grid, Layout, message as toast, Space, Spin, Typography } from "antd";
+import { DeleteOutlined, MenuOutlined, PlusOutlined } from "@ant-design/icons";
 import ChatPage from "./pages/ChatPage";
 import KnowledgePage from "./pages/KnowledgePage";
 import ReviewPage from "./pages/ReviewPage";
-import { listSessions } from "./services/api";
+import { deleteSession, listSessions } from "./services/api";
 import {
   CHAT_NEW_SESSION_EVENT,
   CHAT_SESSIONS_UPDATED_EVENT,
@@ -63,6 +63,22 @@ function Shell() {
     setMobileNavOpen(false);
   };
 
+  const removeSession = async (sessionId: number) => {
+    try {
+      await deleteSession(sessionId);
+      setSessions((items) => items.filter((item) => item.id !== sessionId));
+      if (selectedSessionId === sessionId) {
+        window.localStorage.removeItem(LAST_SESSION_KEY);
+        navigate("/chat?new=1");
+        window.dispatchEvent(new Event(CHAT_NEW_SESSION_EVENT));
+      }
+      window.dispatchEvent(new Event(CHAT_SESSIONS_UPDATED_EVENT));
+      toast.success("已删除会话");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "删除会话失败");
+    }
+  };
+
   useEffect(() => {
     void refreshSessions();
     const onSessionsUpdated = () => {
@@ -111,21 +127,33 @@ function Shell() {
           <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无历史对话" />
         ) : (
           <div className="session-list">
-            {sessions.map((session) => (
-              <button
-                key={session.id}
-                type="button"
-                className={`session-nav-item ${
-                  isChatRoute && selectedSessionId === session.id ? "active" : ""
-                }`}
-                onClick={() => openSession(session.id)}
-              >
-                <span className="session-nav-title">{session.title || `会话 #${session.id}`}</span>
-                <span className="session-nav-meta">
-                  #{session.id} · {formatSessionTime(session)}
-                </span>
-              </button>
-            ))}
+            {sessions.map((session) => {
+              const active = isChatRoute && selectedSessionId === session.id;
+              const title = session.title || `会话 #${session.id}`;
+              return (
+                <div key={session.id} className={`session-nav-row ${active ? "active" : ""}`}>
+                  <button
+                    type="button"
+                    className="session-nav-item"
+                    onClick={() => openSession(session.id)}
+                  >
+                    <span className="session-nav-title">{title}</span>
+                    <span className="session-nav-meta">
+                      #{session.id} · {formatSessionTime(session)}
+                    </span>
+                  </button>
+                  <Button
+                    type="text"
+                    danger
+                    size="small"
+                    className="session-delete-button"
+                    icon={<DeleteOutlined />}
+                    aria-label={`删除会话 ${title}`}
+                    onClick={() => removeSession(session.id)}
+                  />
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
