@@ -189,13 +189,13 @@ function Shell() {
             </Space>
           </Space>
           <nav className="header-actions" aria-label="顶部快捷入口">
-            <NavLink to="/knowledge">知识库</NavLink>
             <Button
               className="header-action-button"
               icon={<PlusOutlined />}
               aria-label="新对话"
               onClick={startNewChat}
             />
+            <NavLink to="/knowledge">知识库</NavLink>
             <NavLink to="/review">复盘</NavLink>
           </nav>
         </Header>
