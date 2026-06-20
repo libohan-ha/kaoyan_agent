@@ -1,5 +1,6 @@
 import { App as AntApp } from "antd";
 import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import ChatPage from "./ChatPage";
@@ -108,4 +109,25 @@ test("renders chat message content as markdown", async () => {
   expect(await screen.findByRole("heading", { name: "复盘要点" })).toBeInTheDocument();
   expect(screen.getByText("重点")).toBeInTheDocument();
   expect(screen.getByText("height(root)")).toBeInTheDocument();
+});
+
+test("sends chat with auto mode by default", async () => {
+  const user = userEvent.setup();
+  window.localStorage.clear();
+  apiMocks.getSession.mockReset();
+  apiMocks.listSessions.mockResolvedValueOnce({ sessions: [] });
+  apiMocks.streamChat.mockResolvedValueOnce(undefined);
+
+  renderChatPage("/chat?new=1");
+
+  expect(screen.queryByText("模式")).not.toBeInTheDocument();
+  await user.type(await screen.findByPlaceholderText("输入知识点或问题"), "线性代数怎么复习");
+  await user.click(screen.getByRole("button", { name: /发送/ }));
+
+  await waitFor(() =>
+    expect(apiMocks.streamChat).toHaveBeenCalledWith(
+      { message: "线性代数怎么复习", mode: "auto", session_id: undefined },
+      expect.any(Function)
+    )
+  );
 });

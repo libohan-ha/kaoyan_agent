@@ -267,6 +267,19 @@ a {
   box-shadow: var(--shadow-sm);
 }
 
+.header-action-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  color: var(--brand-700);
+  background: var(--bg-active);
+  border: 1px solid var(--brand-100);
+  border-radius: 10px;
+  box-shadow: var(--shadow-sm);
+}
+
 .header-actions a.active {
   background: var(--bg-active);
   border-color: var(--brand-100);
@@ -801,25 +814,18 @@ a {
 /* ===== 输入框（对话页底部）===== */
 .composer-panel {
   display: grid;
-  grid-template-columns: 190px minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 10px;
   align-items: end;
-  padding: 14px;
+  padding: 10px;
   background: var(--bg-paper);
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-lg);
 }
 
-.composer-mode {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.composer-mode .ant-typography-secondary {
-  font-size: 12px;
-  line-height: 1.35;
+.composer-panel .ant-input {
+  min-height: 56px !important;
 }
 
 /* ===== 预览卡（保存知识点）===== */
@@ -1162,6 +1168,11 @@ a {
     height: 34px;
     padding: 0 10px;
     font-size: 14px;
+  }
+
+  .header-action-button {
+    width: 34px;
+    height: 34px;
   }
 
   .filter-bar {

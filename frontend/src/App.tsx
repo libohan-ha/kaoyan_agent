@@ -110,14 +110,6 @@ function Shell() {
       <div className="session-sidebar-body">
         <div className="session-sidebar-header">
           <Typography.Text strong>对话列表</Typography.Text>
-          <Button
-            size="small"
-            icon={<PlusOutlined />}
-            aria-label="新对话"
-            onClick={startNewChat}
-          >
-            新对话
-          </Button>
         </div>
         {sessionsLoading ? (
           <div className="session-sidebar-loading">
@@ -198,6 +190,12 @@ function Shell() {
           </Space>
           <nav className="header-actions" aria-label="顶部快捷入口">
             <NavLink to="/knowledge">知识库</NavLink>
+            <Button
+              className="header-action-button"
+              icon={<PlusOutlined />}
+              aria-label="新对话"
+              onClick={startNewChat}
+            />
             <NavLink to="/review">复盘</NavLink>
           </nav>
         </Header>

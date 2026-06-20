@@ -4,15 +4,13 @@ import {
   App,
   Button,
   Card,
-  Empty,
   Input,
-  Segmented,
   Space,
   Spin,
   Tag,
   Typography
 } from "antd";
-import { PlusOutlined, SendOutlined } from "@ant-design/icons";
+import { SendOutlined } from "@ant-design/icons";
 import KnowledgePreviewCard from "../components/KnowledgePreviewCard";
 import MarkdownContent from "../components/MarkdownContent";
 import SourceCitationCards from "../components/SourceCitationCards";
@@ -22,44 +20,28 @@ import {
   CHAT_SESSIONS_UPDATED_EVENT,
   LAST_SESSION_KEY
 } from "../sessionState";
-import type {
-  ChatMessage,
-  ChatMode,
-  ChatSession,
-  KnowledgePreview,
-  StoredChatMessage
-} from "../types/api";
+import type { ChatMessage, ChatSession, KnowledgePreview, StoredChatMessage } from "../types/api";
 
-const modeOptions = [
-  { label: "自动", value: "auto" },
-  { label: "保存", value: "save" },
-  { label: "提问", value: "ask" }
-];
-
-const starterPrompts: Array<{ title: string; description: string; prompt: string; mode: ChatMode }> = [
+const starterPrompts: Array<{ title: string; description: string; prompt: string }> = [
   {
     title: "记录一个知识点",
     description: "AI 自动分类、打标签，确认后入库",
-    prompt: "今天学了 ",
-    mode: "save"
+    prompt: "今天学了 "
   },
   {
     title: "问问我的笔记",
     description: "优先检索你自己记录过的内容",
-    prompt: "根据我的笔记，",
-    mode: "ask"
+    prompt: "根据我的笔记，"
   },
   {
     title: "今日复盘",
     description: "看看今天新增的知识点",
-    prompt: "今日复盘",
-    mode: "auto"
+    prompt: "今日复盘"
   },
   {
     title: "最近学了什么",
     description: "回顾最近一段时间的记录",
-    prompt: "最近一周我学了什么？",
-    mode: "auto"
+    prompt: "最近一周我学了什么？"
   }
 ];
 
@@ -84,7 +66,6 @@ export default function ChatPage() {
   const [searchParams] = useSearchParams();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
-  const [mode, setMode] = useState<ChatMode>("auto");
   const [loading, setLoading] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [sessionTitle, setSessionTitle] = useState("新对话");
@@ -206,14 +187,8 @@ export default function ChatPage() {
     };
   }, [applySession, isNewChatRequest, loadSession, navigate, sessionIdFromUrl]);
 
-  const newChat = () => {
-    resetChatState();
-    navigate("/chat?new=1");
-  };
-
   const useStarterPrompt = (prompt: (typeof starterPrompts)[number]) => {
     setInput(prompt.prompt);
-    setMode(prompt.mode);
   };
 
   const send = async () => {
@@ -233,7 +208,7 @@ export default function ChatPage() {
 
     try {
       const sessionId = await streamChat(
-        { message: text, mode, session_id: sessionIdRef.current },
+        { message: text, mode: "auto", session_id: sessionIdRef.current },
         (event) => {
           if (event.type === "token") {
             content += event.content;
@@ -303,9 +278,6 @@ export default function ChatPage() {
             {sessionIdRef.current ? `会话 #${sessionIdRef.current}` : "尚未开始"}
           </Typography.Text>
         </div>
-        <Button icon={<PlusOutlined />} onClick={newChat}>
-          新对话
-        </Button>
       </section>
 
       <section className="chat-thread">
@@ -374,20 +346,9 @@ export default function ChatPage() {
       </section>
 
       <section className="composer-panel">
-        <div className="composer-mode">
-          <Typography.Text strong>模式</Typography.Text>
-          <Typography.Text type="secondary">
-            自动识别记录、提问或复盘，也可以手动指定
-          </Typography.Text>
-          <Segmented
-            value={mode}
-            options={modeOptions}
-            onChange={(value) => setMode(value as ChatMode)}
-          />
-        </div>
         <Input.TextArea
           value={input}
-          autoSize={{ minRows: 4, maxRows: 8 }}
+          autoSize={{ minRows: 2, maxRows: 5 }}
           placeholder="输入知识点或问题"
           onChange={(event) => setInput(event.target.value)}
           onPressEnter={(event) => {

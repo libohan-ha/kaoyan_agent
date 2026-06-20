@@ -108,6 +108,7 @@ test("header quick actions show knowledge and review instead of backend controls
 
   const quickActions = screen.getByRole("navigation", { name: "顶部快捷入口" });
   expect(within(quickActions).getByRole("link", { name: "知识库" })).toBeInTheDocument();
+  expect(within(quickActions).getByRole("button", { name: "新对话" })).toBeInTheDocument();
   expect(within(quickActions).getByRole("link", { name: "复盘" })).toBeInTheDocument();
   expect(screen.queryByText(/后端/)).not.toBeInTheDocument();
   expect(screen.queryByRole("button", { name: /刷新/ })).not.toBeInTheDocument();
@@ -119,18 +120,18 @@ test("desktop header keeps chat as the primary section link", () => {
 
   expect(screen.getByRole("link", { name: "对话" })).toBeInTheDocument();
   expect(screen.getByRole("link", { name: "知识库" })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "新对话" })).toBeInTheDocument();
   expect(screen.getByRole("link", { name: "复盘" })).toBeInTheDocument();
 });
 
-test("left sidebar new chat clears the loaded conversation", async () => {
+test("header new chat clears the loaded conversation", async () => {
   const user = userEvent.setup();
   mockDesktopViewport();
   render(<App />);
 
-  const sidebar = await screen.findByRole("complementary", { name: "对话列表" });
   expect(await screen.findByText("树的高度怎么求")).toBeInTheDocument();
 
-  await user.click(within(sidebar).getByRole("button", { name: /新对话/ }));
+  await user.click(screen.getByRole("button", { name: "新对话" }));
 
   await waitFor(() => expect(screen.queryByText("树的高度怎么求")).not.toBeInTheDocument());
   expect(screen.getByText("今天学了什么？")).toBeInTheDocument();
