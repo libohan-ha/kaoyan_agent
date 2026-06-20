@@ -68,7 +68,6 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(false);
-  const [sessionTitle, setSessionTitle] = useState("新对话");
   const [savingPreviewId, setSavingPreviewId] = useState<string | null>(null);
   const sessionIdRef = useRef<number | undefined>();
   const initialRestoreDoneRef = useRef(false);
@@ -90,7 +89,6 @@ export default function ChatPage() {
   const resetChatState = useCallback(() => {
     sessionIdRef.current = undefined;
     window.localStorage.removeItem(LAST_SESSION_KEY);
-    setSessionTitle("新对话");
     setMessages([]);
     setInput("");
     setSavingPreviewId(null);
@@ -101,7 +99,6 @@ export default function ChatPage() {
     (result: { session: ChatSession; messages: StoredChatMessage[] }) => {
       sessionIdRef.current = result.session.id;
       window.localStorage.setItem(LAST_SESSION_KEY, String(result.session.id));
-      setSessionTitle(result.session.title || "新对话");
       setMessages(result.messages.map(mapStoredMessage));
     },
     []
@@ -238,7 +235,6 @@ export default function ChatPage() {
       sessionIdRef.current = sessionId;
       if (sessionId) {
         window.localStorage.setItem(LAST_SESSION_KEY, String(sessionId));
-        if (sessionTitle === "新对话") setSessionTitle(text.slice(0, 24));
         navigate(`/chat?session=${sessionId}`, { replace: true });
         window.dispatchEvent(new Event(CHAT_SESSIONS_UPDATED_EVENT));
       }
@@ -271,15 +267,6 @@ export default function ChatPage() {
 
   return (
     <div className="page-grid chat-page">
-      <section className="chat-toolbar">
-        <div>
-          <Typography.Text strong>{sessionTitle}</Typography.Text>
-          <Typography.Text type="secondary" className="chat-session-meta">
-            {sessionIdRef.current ? `会话 #${sessionIdRef.current}` : "尚未开始"}
-          </Typography.Text>
-        </div>
-      </section>
-
       <section className="chat-thread">
         {historyLoading ? (
           <div className="empty-state">
